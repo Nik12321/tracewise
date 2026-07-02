@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from tracewise.storage.base import BaseStorage
 
 
@@ -40,8 +40,12 @@ def create_router(storage: BaseStorage) -> APIRouter:
     router = APIRouter(prefix="/api")
 
     @router.get("/traces")
-    def list_traces(limit: int = 50):
-        trace_ids = storage.list_traces(limit=limit)
+    def list_traces(
+            limit: int = 50,
+            search: str = "",
+            method: list[str] | None = Query(None)
+    ):
+        trace_ids = storage.list_traces(limit=limit, search=search, method=method)
         result = []
         for trace_id in trace_ids:
             spans = storage.get_trace(trace_id)

@@ -16,7 +16,12 @@ class BaseStorage(ABC):
     def get_trace(self, trace_id: str) -> list[Span]: ...
 
     @abstractmethod
-    def list_traces(self, limit: int = 50) -> list[str]: ...
+    def list_traces(
+            self,
+            limit: int = 50,
+            search: str = '',
+            method: list[str] | None = None
+    ) -> list[str]: ...
 
     @abstractmethod
     def delete_old_traces(self, keep: int) -> None: ...

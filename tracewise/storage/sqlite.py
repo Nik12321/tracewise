@@ -157,18 +157,40 @@ class SQLiteStorage(BaseStorage):
         ).fetchall()
         return [_row_to_span(dict(row)) for row in rows]
 
-    def list_traces(self, limit: int = 50) -> list[str]:
+    def list_traces(
+            self,
+            limit: int = 50,
+            search: str = '',
+            method: list[str] = ''
+    ) -> list[str]:
         conn = self._get_conn()
-        rows = conn.execute(
+
+        conditions = []
+        params = []
+
+        if search:
+            conditions.append("LOWER(name) LIKE LOWER(?)")
+            params.append(f'%{search}%')
+
+        if method:
+            method_conditions = []
+            for m in method:
+                method_conditions.append("LOWER(name) LIKE LOWER(?)")
+                params.append(f'{m.lower()}%')
+            conditions.append(f"({' OR '.join(method_conditions)})")
+
+        where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+        query = f"""
+                SELECT trace_id, MAX(start_time) as latest
+                FROM spans
+                {where}
+                GROUP BY trace_id
+                ORDER BY latest DESC
+                LIMIT ?
             """
-            SELECT trace_id, MAX(start_time) as latest
-            FROM spans
-            GROUP BY trace_id
-            ORDER BY latest DESC
-            LIMIT ?
-            """,
-            (limit,),
-        ).fetchall()
+        params.append(limit)
+        rows = conn.execute(query, tuple(params)).fetchall()
+
         return [row["trace_id"] for row in rows]
 
     def delete_old_traces(self, keep: int) -> None:
