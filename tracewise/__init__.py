@@ -106,14 +106,15 @@ def _disable_tracewise_for_app(app: FastAPI) -> None:
 
 
 def init(
-    app: FastAPI,
-    *,
-    db_path: str | None = None,
-    max_traces: int = 1000,
-    enabled: bool = True,
-    capture_logs: bool | int = False,
-    instrument_httpx: bool = False,
-    instrument_sqlalchemy: bool = False,
+        app: FastAPI,
+        *,
+        db_path: str | None = None,
+        max_traces: int = 1000,
+        enabled: bool = True,
+        capture_logs: bool | int = False,
+        instrument_httpx: bool = False,
+        instrument_sqlalchemy: bool = False,
+        exclude_paths: list[str] = [],
 ) -> None:
     global _storage, _httpx_instrumentation_enabled, _sqlalchemy_instrumentation_enabled
 
@@ -147,7 +148,11 @@ def init(
 
     if not _app_has_tracewise_middleware(app):
         app.middleware_stack = None
-        app.add_middleware(TraceWiseMiddleware, storage=_storage, skip_prefixes=[_VIEWER_MOUNT_PATH])
+        app.add_middleware(
+            TraceWiseMiddleware,
+            storage=_storage,
+            skip_prefixes=[_VIEWER_MOUNT_PATH] + exclude_paths
+        )
 
     if not _app_has_tracewise_viewer_mount(app):
         viewer = create_viewer_app(storage=_storage)

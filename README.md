@@ -127,6 +127,7 @@ Main `init()` options:
   `traceparent` headers
 - `instrument_sqlalchemy`: record SQLAlchemy statements as DB `CLIENT` spans
   and capture raw `db.statement` text without parameter payloads
+- `exclude_paths`: paths along which traces will not be tracked
 
 If `db_path` is not provided, TraceWise stores data under
 `~/.tracewise/traces.db`.
